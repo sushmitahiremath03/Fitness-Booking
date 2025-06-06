@@ -27,8 +27,8 @@ def book_class(request):
             return Response({'error': f'{field} is required.'}, status=400)
         
     try:
-        fitness_class = FitnessClass.objects.get(id = data['class_id'])
-    except fitness_class.DoesNotExist:
+        fitness_class = FitnessClass.objects.get(id=data['class_id'])
+    except FitnessClass.DoesNotExist:
         return Response({'error': 'Class not found'}, status=404)
     
     if fitness_class.available_slots <= 0 :
@@ -54,8 +54,15 @@ def book_class(request):
 @api_view(['GET'])
 def get_bookings(request):
     email = request.GET.get('email')
+    
     if not email:
         return Response({'error': 'Email parameter is required'}, status=400)
+
     bookings = Booking.objects.filter(client_email=email)
+    
+    if not bookings.exists():
+        return Response({'error': 'No bookings found for this email'}, status=404)
+
     serializer = BookingSerializer(bookings, many=True)
     return Response(serializer.data)
+
